@@ -4,7 +4,7 @@ A core for [Chimera](https://github.com/ToolAssisted-run/chimera), the
 frontend for tool-assisted speedruns, that plays games made with **Godot
 4.4** (the [Godot Engine](https://godotengine.org)). It is Godot 4.4.1's
 own engine for exported games, built for Chimera's sandbox, and produces one
-file, `godot44.chimeraCore`, that goes in Chimera's `Cores` folder.
+file, `godot44.chimeraCore`, that goes in Chimera's `cores` folder.
 
 Each Godot 4 version has its core, because a game's compiled scripts only
 load in the version that exported them:
