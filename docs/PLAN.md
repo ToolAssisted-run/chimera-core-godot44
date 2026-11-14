@@ -64,3 +64,52 @@ game plays the same either way. The test script checks the 256-bit code in
 the sandbox and natively, native = sandbox with it, and that Baseline still
 makes 128-bit code and plays the same steps.
 
+
+## A game that asks for a file of the player's own (user-decided, 2026-11-14, chimera issue 567)
+
+Super Mario Bros. Remastered 1.1.0 (GPL-3.0, Godot 4.6) did not start in
+the Godot 4.6 core, and it needs the player's own Super Mario Bros. NES ROM.
+The owner asked for support only through changes every Godot game could use
+(2026-11-14). Two were needed.
+
+- **The files slot takes a file of any kind** (user-decided, 2026-11-14).
+  The game looks in the folder of its executable for any file ending in
+  `.nes`, checks its hash and copies it to `user://baserom.nes`. The core
+  already puts the files of the project's "Other files beside the game"
+  slot in that folder (`/game`), but the slot listed eight extensions, and
+  Chimera refused a project with a `.nes` there ("file '...' is not a format
+  slot 'files' accepts"). The slot now declares no formats
+  (`"formats": []`): Chimera takes any file there (a rule it documents and
+  tests), the file picker shows every file, and the core is unchanged.
+- **user://logs is there at power-on** (user-decided, 2026-11-14: "No side
+  effects in Chimera are allowable. Any file system modifications need to be
+  fully emulated."). The game's mod loader opens `user://logs/modloader.log`
+  for writing without checking the result. On a desktop, Godot's own log
+  file has made that folder; here Godot's log goes nowhere (see "Save
+  data"), the open failed, and the export template, which leaves out
+  GDScript's null checks, crashed the core at start ("the core crashed: it
+  read or ran address (nil)", in `MethodBindTR<bool, String const&>`). The
+  core's disk now holds an empty `/user/logs` from power-on. That disk is
+  the core's memory, so the folder is in every state and nothing is written
+  to the computer's files. An empty folder is no save data.
+
+Tests: `waterbox/run-gate.sh` checks that the probe's own log opens in
+user://logs, native and in the sandbox, with a save and load before every
+frame, and from states at frame 0 and frame 25 (the probe removes the folder
+at frame 10, so the later state is seen to carry the disk as the game left
+it, where a new machine has the folder); and that Dodge the Creeps, which
+writes nothing, exports no save data. The probe was exported again with this
+core's Godot editor for these checks. `tests/run-frontend.sh` makes a project
+with a generated `stand-in.nes` in the files slot and plays it to the
+reference's picture.
+
+The game is a Godot 4.6 game and runs only in the Godot 4.6 core, where it
+was played (that core's docs/PLAN.md); this core has the same two changes,
+as every Godot core has the same files, and was tested with its own test
+games.
+
+Measured on jaffanator01 (2026-11-14), with the probe exported again by the
+Godot 4.4.1 editor: `waterbox/run-gate.sh` 51 passed, 0 failed (the new
+user://logs and save data checks among them); `tests/run-frontend.sh` 6 ok,
+the new files slot check among them. The checks were seen to fail in the
+Godot 4.6 core, without the folder and before the slot changed.
