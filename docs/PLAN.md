@@ -113,3 +113,29 @@ Godot 4.4.1 editor: `waterbox/run-gate.sh` 51 passed, 0 failed (the new
 user://logs and save data checks among them); `tests/run-frontend.sh` 6 ok,
 the new files slot check among them. The checks were seen to fail in the
 Godot 4.6 core, without the folder and before the slot changed.
+
+## Machine specification 3 (2026-11-20, owner's audit of the cores that carry llvmpipe)
+
+The core now declares miniBox machine specification 3 (`__wbx_machine_spec` in
+`module/chimera/chimera_core.cpp`). Why: this core carries Mesa's llvmpipe,
+which makes code at run time with LLVM. Under specification 2 an `mmap` with a
+bare address hint maps over whatever already lives at that address, and LLVM's
+code generator asks for the page next to the one it just got. The Supermodel
+core lost the first page of its picture buffer that way (its docs/PLAN.md,
+2026-11-20). Under specification 3 a hint is used only where those pages are
+free, and the call is placed elsewhere otherwise.
+
+What else specification 3 changes, and why it does not matter here: the machine
+has its own clock (every clock read advances it one microsecond) and timed
+waits follow it. Godot's time in this core is the core's own (`OS_Chimera`,
+frames over the frame rate), so no game sees the machine's clock.
+
+Measured on jaffanator01 on a 40-frame run of Dodge the Creeps with
+`MINIBOX_TRACE_SYSCALLS=1`: of 35 `mmap` calls with an address hint, 9 named
+pages that were already mapped. Under specification 2 all 9 were mapped at the
+hint, on top of the live pages; with this change all 9 were placed elsewhere.
+(The trace does not show the call's flags, so a hint and a call with
+`MAP_FIXED` look alike in it; the count is of calls that name a mapped page.)
+Tests: `waterbox/run-gate.sh` 51 passed, 0 failed, 0 skipped;
+`tests/run-frontend.sh` 6 ok, 0 failed, 0 skipped; Chimera's `test-packages`
+on the package 26 passed, 0 failed.
