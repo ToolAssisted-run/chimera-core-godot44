@@ -139,3 +139,5 @@ hint, on top of the live pages; with this change all 9 were placed elsewhere.
 Tests: `waterbox/run-gate.sh` 51 passed, 0 failed, 0 skipped;
 `tests/run-frontend.sh` 6 ok, 0 failed, 0 skipped; Chimera's `test-packages`
 on the package 26 passed, 0 failed.
+
+Old movies still replay (measured 2026-11-21): a 900-frame movie of Dodge the Creeps, recorded with the published spec-2 package, gives the same pictures at frames 300 and 899 on this spec-3 package (CI's build of ce54654). Godot's time here is the core's own (OS_Chimera), so the machine clock's change under spec 3 does not reach the game.
